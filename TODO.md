@@ -1,0 +1,5 @@
+- [x] Hackatime OAuth
+- [x] Slack OAuth
+- [ ] Frontend (UI or CLI?)
+- [ ] Auto PFP generation?
+- [ ] Sign out

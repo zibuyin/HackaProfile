@@ -8,6 +8,7 @@ from rich.prompt import Confirm
 from rich.table import Table
 from rich import box
 from rich.live import Live
+from rich.highlighter import Highlighter
 # from rich.terminal_theme import MONOKAI
 
 import typer
@@ -19,12 +20,13 @@ import questionary
 
 import os
 
-
+import dotenv
 console = Console()
 
 app = typer.Typer(no_args_is_help=True)
 hackatime = backend.hackatime()
 slack = backend.slack()
+slack_config = dotenv.dotenv_values("config/slack.hackaprofile.conf")
 
 @app.callback()
 def callback():
@@ -120,6 +122,11 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
         
         
         
+        
+class placeholderHighlighter(Highlighter):
+    def highlight(self, text) -> None:
+        text.highlight_regex(r"\{\{.*?\}\}", "bold yellow")
+        
 @app.command()
 def config(platform: Annotated[str, typer.Argument]):
     table = Table(
@@ -130,65 +137,19 @@ def config(platform: Annotated[str, typer.Argument]):
         expand=True,
     )
     
-
-    profile_fields = slack.get_team_profile()["profile"]["fields"]
-    profile_id_kv= {}
-    for profile_field in profile_fields:
-        try:
-            if not profile_field['permissions']["api"]:
-                # print(profile_field['permissions'])
-                fieldEditable = True
-            else:
-                # print(profile_field['permissions'])
-                fieldEditable = False
-            apiPerms = profile_field['permissions']["api"]
-        except KeyError:
-            fieldEditable = False
-            apiPerms = "None"
-        
-        if fieldEditable:
-            profile_field["id"] = profile_field["label"]
-
-        # rprint(profile_id_value_pair)
+    hlt = placeholderHighlighter()
+    slack_config_keys = list(slack_config.keys())
+    slack_config_values = list(slack_config.values())
     
-    profile = slack.get_profile()["profile"]
-    # rprint(profile)
-    normalized_kv = {}
-    for field in profile:
-        # print((type(field), type(profile[field])))
-        value = profile[field]
-        if field == "fields":
-            labels = profile[field]
-            # print(labels)
-            keys = list(labels.keys())
-            values = list(labels.values())
-            # print((keys, values))
+    for i in range(len(slack_config_keys)):
+        field = slack_config_keys[i]
+        value = slack_config_values[i]
+        if not value:
+            value = "Not set"
+        table.add_row(field, hlt(value))
             
-            for i in range(len(keys) - 1):
-                key = profile_id_kv.get(keys[i], "Unknown")
-                normalized_kv[key] = values[i]["value"]
-        else:
-            normalized_kv[field] = value
-    
-    # normalized_kv.pop("status_emoji_display_info")
-    rprint(normalized_kv)
-    
-    # for row in normalized_kv:
-    kv_keys = list(normalized_kv.keys())
-    kv_values = list(normalized_kv.values())
-    
-    for i in range(len(kv_keys) - 1):
-        # rprint((type(field), type(value)))
-        rprint((kv_keys[i], kv_values[i]))
-        table.add_row(kv_keys[i], str(kv_values[i]))
-        
-    
-        # table.add_row(field)
-    # panel = Panel(table)
-    # console.clear()
+            
     rprint(table)
-    rprint("\n")
-    
     option = questionary.select(
         "What do you want to do?",
         choices = [

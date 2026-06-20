@@ -2,7 +2,7 @@ import hackatimeOA
 import slackOA
 import keyring
 import requests
-
+import dotenv
 
 service_name = "HackaProfile"
 
@@ -10,7 +10,8 @@ class hackatime():
     def __init__(self) -> None:
         self.hb_url = "https://hackatime.hackclub.com/api/v1/authenticated/heartbeats/latest"
         self.username = "hackatime_token"
-
+        self.config_path = "config/hackatime.hackaprofile.conf"
+        
     # Authorize hackatime
     def authorize(self) -> tuple:
         token = hackatimeOA.authenticate()
@@ -42,6 +43,9 @@ class hackatime():
             json = {"ok": False}
         return json
     
+    def fetch_config(self) -> dict:
+        return dotenv.dotenv_values(self.config_path)
+    
     def status(self):
         json = self.fetch_hb()
         # print(json)
@@ -60,6 +64,7 @@ class slack():
     def __init__(self) -> None:
         self.base_url = "https://slack.com/api"
         self.username = "slack_token"
+        self.config_path = "config/slack.hackaprofile.conf"
     # Authorize hackatime
     def authorize(self) -> tuple:
         token = slackOA.authenticate()
@@ -79,17 +84,13 @@ class slack():
     def store_token(self, token: str) -> None:
         keyring.set_password(service_name, self.username, token)
         
-    def set_profile(self):
+    def set_profile(self, profile: dict) -> dict:
         url = f"{self.base_url}/users.profile.set"
         headers = {
         "Authorization": f"Bearer {self.get_token()}"
         }
         data = {
-            "profile": {
-                "status_text": "test status text",
-                "status_emoji": ":67:",
-                "status_expiration": 0
-            }
+            "profile": profile
         }
         
         # dataJson = json.dumps(data)
@@ -117,6 +118,8 @@ class slack():
         # print(dataJson)
         return requests.get(url=url, headers=headers).json()
     
+    def fetch_config(self) -> dict:
+        return dotenv.dotenv_values(self.config_path)
     def status(self):
         pass
         # json = self.fetch_hb()

@@ -1,7 +1,7 @@
 import time
 from rich import print as rprint
 from rich.panel import Panel
-from rich.console import Console
+from rich.console import Console, Group
 from rich.text import Text
 from rich.pretty import Pretty, pprint
 from rich.prompt import Confirm
@@ -14,19 +14,20 @@ from rich.highlighter import Highlighter
 import typer
 from typing import Annotated
 
-import backend
+import backend as backend
 
 import questionary
 
 import os
+import shutil
 
 import dotenv
+
 console = Console()
 
 app = typer.Typer(no_args_is_help=True)
 hackatime = backend.hackatime()
 slack = backend.slack()
-slack_config = dotenv.dotenv_values("config/slack.hackaprofile.conf")
 
 @app.callback()
 def callback():
@@ -48,9 +49,53 @@ def status():
     """
     View the status of HackaProfile
     """
-    rprint("status")
+    parsed_hackatime_status = {}
+    parsed_slack_status = {}
+    
+    with console.status("Fetching status...", spinner="dots"):
+        hackatime_status: dict = hackatime.fetch_hb()
+        slack_status: dict = slack.get_profile()["profile"]
+        # rprint(slack_status)
+        
+    if hackatime_status.get("ok", True) == False:
+        parsed_hackatime_status["Authorization"] = "❌ Unauthorized"
+    else:
+        parsed_hackatime_status["Authorization"] = "[bold green]✓[/bold green] Authorized"
+        parsed_hackatime_status["Current Language"] = hackatime_status.get("language", "Unknown")
+        parsed_hackatime_status["Current Project"] = hackatime_status.get("project", "Unknown")
+    if slack_status.get("ok", True) == False:
+        parsed_slack_status["Authorization"] = f"❌ {slack_status.get("error", "Unknown error")}"
+    else:
+        parsed_slack_status["Authorization"] = "[bold green]✓[/bold green] Authorized"
+        parsed_slack_status["Display Name"] = slack_status.get("display_name", "Unknown")
+        parsed_slack_status["Status Text"] = slack_status.get("status_text", "Unknown")
+        parsed_slack_status["Status Emoji"] = slack_status.get("status_emoji", "Unknown")
+        
+    
+    hackatime_table = Table("Field", "Value", title="Hackatime", box=box.ROUNDED, expand=True)
+    slack_table = Table("Field", "Value", title="Slack", box=box.ROUNDED, expand=True)
+    
+    for _, field in enumerate(parsed_hackatime_status):
+        key = field
+        value = parsed_hackatime_status[field]
+        hackatime_table.add_row(key, value)
+        
+    for _, field in enumerate(parsed_slack_status):
+        key = field
+        value = parsed_slack_status[field]
+        slack_table.add_row(key, value)
+    
+    grid = Table.grid(expand=True, padding=10)
+    grid.add_column()
+    grid.add_column(justify="right")
+    grid.add_row(hackatime_table, slack_table)
+    rprint(
+        "",
+        grid
+    )
+    
 
-
+# [bold green]✓[/bold green]
 def authorizeHA():
     ok, hatoken = hackatime.authorize()
     # If token is given:
@@ -74,6 +119,17 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
     console.rule()
     # rprint(force)
     
+    # Copy config files
+    try:
+        shutil.copytree("../configTemplate", "../config")
+        rprint("[bold green]✓[/bold green] Config file setup done!")
+    except FileExistsError:
+        rprint("[bold green]✓[/bold green] Config file already exists!")
+    except Exception as e:
+        rprint(f"❌ Failed to setup config files: {e}")
+        
+        
+    
     # If no token stored
     if force or not hackatime.status()["ok"]:
         # hackatimeConfirm = Confirm.ask("[bold cyan]Do you want to authorize Hackatime (This will redirect you to OAuth page)", default=True)
@@ -85,7 +141,7 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
             if ok:
                 rprint("[bold green]✓[/bold green] Hackatime authorized!")
                 
-            else:
+            else :
                 rprint(f"[bold red]err: {str(hackatime_token)}")    
         else:
             rprint("[bold red]err: HackaProfile could not function without Hackatime.")
@@ -138,8 +194,8 @@ def config(platform: Annotated[str, typer.Argument]):
     )
     
     hlt = placeholderHighlighter()
-    slack_config_keys = list(slack_config.keys())
-    slack_config_values = list(slack_config.values())
+    slack_config_keys = list(slack.load_config().keys())
+    slack_config_values = list(slack.load_config().values())
     
     for i in range(len(slack_config_keys)):
         field = slack_config_keys[i]
@@ -177,6 +233,16 @@ def auth(platform: Annotated[str, typer.Option(prompt=True, help="Which platform
     """
     
     rprint(f"auth {platform}")
+
+@app.command()
+def revoke(platform: str, all: Annotated[bool, typer.Option("--all")] = False):
+    
+    # TODO
+    if all:
+        pass
+    else:
+        if platform == "hackatime":
+            rprint(hackatime.revoke())
     
 @app.command()
 def debug():

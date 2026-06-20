@@ -1,5 +1,5 @@
 import time
-import backend
+import backend as backend
 import dotenv
 
 

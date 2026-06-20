@@ -1,17 +1,19 @@
-import hackatimeOA
-import slackOA
+import hackatimeOA as hackatimeOA
+import slackOA as slackOA
 import keyring
 import requests
 import dotenv
 
 service_name = "HackaProfile"
+# config = dotenv.dotenv_values("../config/.conf")
+
 
 class hackatime():
     def __init__(self) -> None:
         self.hb_url = "https://hackatime.hackclub.com/api/v1/authenticated/heartbeats/latest"
         self.username = "hackatime_token"
-        self.config_path = "config/hackatime.hackaprofile.conf"
-        
+        self.config_path = "../config/hackatime.hackaprofile.conf"
+        # self.client_id = self.load_config()["client_id"]
     # Authorize hackatime
     def authorize(self) -> tuple:
         token = hackatimeOA.authenticate()
@@ -21,7 +23,22 @@ class hackatime():
             return (True, token)
         else:
             return (False, token)
-            
+    
+    def revoke(self):
+        url = "https://hackatime.hackclub.com/oauth/revoke"
+        print(self.fetch_config()["client_id"])
+        headers = {
+        "Authorization": f"Bearer {self.get_token()}"
+        }
+        data = {
+            "token": self.get_token(),
+            "client_id": self.fetch_config()["client_id"],
+        }
+        
+        # dataJson = json.dumps(data)
+        # print(dataJson)
+        return requests.post(url=url, data=data).json()
+
     def get_token(self) -> str:
         token = keyring.get_password(service_name, self.username)
         if type(token) != str:
@@ -57,14 +74,16 @@ class hackatime():
         else:
             error = ""
         return {"ok": ok, "error": error}
-
+    def load_config(self) -> dict:
+        return dotenv.dotenv_values(self.config_path)
 
 
 class slack():
     def __init__(self) -> None:
         self.base_url = "https://slack.com/api"
         self.username = "slack_token"
-        self.config_path = "config/slack.hackaprofile.conf"
+        self.config_path = "../config/slack.hackaprofile.conf"
+        # self.client_id = self.load_config()["client_id"]
     # Authorize hackatime
     def authorize(self) -> tuple:
         token = slackOA.authenticate()
@@ -120,6 +139,7 @@ class slack():
     
     def fetch_config(self) -> dict:
         return dotenv.dotenv_values(self.config_path)
+    
     def status(self):
         pass
         # json = self.fetch_hb()
@@ -134,6 +154,9 @@ class slack():
         # return {"ok": ok, "error": error}
         
         
+    def load_config(self) -> dict:
+        return dotenv.dotenv_values(self.config_path)
+
 platfroms = {
     "slack": slack,
 }

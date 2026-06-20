@@ -1,3 +1,10 @@
 
 # Added by ggshield
 .cache_ggshield
+
+/.venv
+/__pycache__
+/test
+/config
+
+.DS_Store

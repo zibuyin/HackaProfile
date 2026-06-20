@@ -1,15 +1,15 @@
 ## Placeholder Variables
-`{{id}}` Some sort of Hackatime id, might be unique?
-`{{created_at}}` When was the Hackatime data last fetched
-`{{time}}` Current time in Unix Timestamp
-`{{category}}`: Category of the Hackatime action
+-`{{id}}` Some sort of Hackatime id, might be unique?
+- `{{created_at}}` When was the Hackatime data last fetched
+- `{{time}}` Current time in Unix Timestamp
+- `{{category}}`: Category of the Hackatime action
     - communicating
     - ai coding
     - coding
     - writing docs
-`{{project}}` Hackatime project name
-`{{language}}` Shows the current language that that you are working on
-`{{editor}}` Current IDE/Editor
-`{{operating_system}}` The current OS (N.B for MacOS, it shows `darwin`)
-`{{machine}}` Current machine's hostname
-`{{entity}}` Path to the file workng on
+- `{{project}}` Hackatime project name
+- `{{language}}` Shows the current language that that you are working on
+- `{{editor}}` Current IDE/Editor
+- `{{operating_system}}` The current OS (N.B for MacOS, it shows `darwin`)
+- `{{entity}}` Path to the file workng on
+- `{{machine}}` Current machine's hostname

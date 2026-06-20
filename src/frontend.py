@@ -24,11 +24,17 @@ from pathlib import Path
 import dotenv
 import pyperclip
 
+import subprocess as sp
+
+import sys
+import psutil
+import signal
 console = Console()
 
 app = typer.Typer(no_args_is_help=True)
 hackatime = backend.hackatime()
 slack = backend.slack()
+
 
 @app.callback()
 def callback():
@@ -179,7 +185,7 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
             rprint("[bold red]err: Platform unsupported")
         
         
-        
+    rprint("[bold green]✓[/bold green] Setup complete!\n\n1.Run [bold green]hackaprofile config \\[platform name][/bold green] to configure\n2.Run [bold green]hackaprofile start[/bold green] to start updating your profile automatically!")
         
 class placeholderHighlighter(Highlighter):
     def highlight(self, text) -> None:
@@ -254,7 +260,52 @@ def revoke(platform: str, all: Annotated[bool, typer.Option("--all")] = False):
     else:
         if platform == "hackatime":
             rprint(hackatime.revoke())
+
+
+def get_agent_pid() -> int:
+    """
+    Retruns PID of the agent process based on agent.pid
+    """
+
+    with open("agent.pid", "r") as f:
+        pid = f.readline()
+        f.close()
+    return int(pid)
+
+def is_agent_alive(pid: int) -> bool:
+    return psutil.pid_exists(pid)
+
+@app.command()
+def start():
+    log = open(Path(__file__).resolve().parent.parent / "logs" / "agent.log", "a")
+    sp.Popen(
+        [sys.executable, "-u", "agent.py"],
+        stdout=log,
+        stderr=sp.STDOUT,
+        stdin=sp.DEVNULL,
+        start_new_session=True
+        
+    )
+    # time.sleep(0.1)
+    rprint(f"[bold green]✓[/bold green] Started background worker!")
     
+@app.command()
+def stop():
+    pid = get_agent_pid()
+    error = ""
+    
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except Exception as e:
+        error = " " + str(e)
+
+    time.sleep(0.5)
+    if not is_agent_alive(pid) and not error:
+        rprint(f"[bold green]✓[/bold green] Stopped background worker!")
+    else:
+        rprint(f"❌ Worker not stopped{error}. Retry or manually kill process {pid}")
+
+
 @app.command()
 def debug():
     """
@@ -266,4 +317,3 @@ def debug():
     
 if __name__ == "__main__":
     app()
-

@@ -1,7 +1,7 @@
 import time
 import backend as backend
 import dotenv
-
+import os
 
 hackatime = backend.hackatime()
 slack = backend.slack()
@@ -12,6 +12,10 @@ interval = 20
 
 # langauge = ""
 
+pid = os.getpid()
+with open("agent.pid", "w") as f:
+    f.write(str(pid))
+    f.close()
 
 def clean_value(value: str) -> str:
     """
@@ -65,7 +69,7 @@ while True:
     
     
     
-    print(map["{{language}}"])
+    print(f'Language: {map["{{language}}"]}')
     print(json)
     
     if "slack" in active_services:
@@ -85,6 +89,7 @@ while True:
         #         "status_emoji": ":67:",
         #         "status_expiration": 0
         # })
+    print("---")
     time.sleep(interval)
     
     

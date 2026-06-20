@@ -1,5 +1,6 @@
 - [x] Hackatime OAuth
 - [x] Slack OAuth
-- [ ] Frontend (UI or CLI?)
+- [x] Frontend (UI or CLI?)
 - [ ] Auto PFP generation?
-- [ ] Sign out
+- [x] Sign out
+- [ ] Proper logger for agent/worker

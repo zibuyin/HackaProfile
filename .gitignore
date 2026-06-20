@@ -8,3 +8,5 @@ test/
 config/
 
 .DS_Store
+
+/logs

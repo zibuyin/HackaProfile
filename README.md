@@ -1,3 +1,6 @@
+# HackaProfile
+<img src="./assets/icon.png" width=30% alt="HackaProfile logo"></img>
+
 ## Placeholder Variables
 -`{{id}}` Some sort of Hackatime id, might be unique?
 - `{{created_at}}` When was the Hackatime data last fetched

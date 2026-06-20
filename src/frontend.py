@@ -20,8 +20,9 @@ import questionary
 
 import os
 import shutil
-
+from pathlib import Path
 import dotenv
+import pyperclip
 
 console = Console()
 
@@ -121,7 +122,8 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
     
     # Copy config files
     try:
-        shutil.copytree("../configTemplate", "../config")
+        # Allow overwrite if set to force
+        shutil.copytree("../configTemplate", "../config", dirs_exist_ok=force)
         rprint("[bold green]✓[/bold green] Config file setup done!")
     except FileExistsError:
         rprint("[bold green]✓[/bold green] Config file already exists!")
@@ -217,22 +219,31 @@ def config(platform: Annotated[str, typer.Argument]):
     if option == "Exit":
         typer.Exit()
     elif option == "Edit":
-        path = f"{os.getcwd()}/config/{platform}.hackaprofile.conf"
+        path = str(Path(__file__).resolve().parent.parent / "config" / f"{platform}.hackaprofile.conf")
         rprint(f"\n[bold green]Open[/bold green] {path} [bold green]in your preferred editor!")
+    
+        cbConfirm = questionary.confirm(
+            "Do you want to copy path to clipboard?",
+            default=False
+        ).ask()
+        if cbConfirm:
+            pyperclip.copy(path)
+            rprint("[bold green]✓[/bold green] Copied!")
+    
     # with Live(table, refresh_per_second=4):
-    #     console.clear()
+    #     console.clear()Path(__file__).resolve().parent.parent / "config" / f"{platform}.hackaprofile.conf"
     #     while True:
     #         table.add_row("Status", "I love coding")
     #         # table.add_row("Status")
     #         time.sleep(0.5)
         
-@app.command()
-def auth(platform: Annotated[str, typer.Option(prompt=True, help="Which platform you want to authenticate", autocompletion=complete_platform)]):
+@app.command(deprecated=True)
+def auth(platform: Annotated[str, typer.Option(prompt=False, help="Which platform you want to authenticate", autocompletion=complete_platform)] = ""):
     """
     Using OAuth to bind HackaProfile to your account
     """
     
-    rprint(f"auth {platform}")
+    rprint(f"Please use [bold green]hackaprofile setup[/bold green] and select the platforms you want to authorize, use [bold green]--force[/bold green] to re-auth Hackatime")
 
 @app.command()
 def revoke(platform: str, all: Annotated[bool, typer.Option("--all")] = False):

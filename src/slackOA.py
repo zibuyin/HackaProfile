@@ -9,6 +9,8 @@ import threading
 import time
 import logging
 import dotenv
+from pathlib import Path
+import platformdirs
 
 log = logging.getLogger('werkzeug')
 
@@ -18,7 +20,8 @@ stateRNG = secrets.token_urlsafe(32)
 baseUrl = "https://slack.com/oauth/v2/authorize"
 exchangeBaseUrl = "https://slack.com/api/oauth.v2.access"
 redirection_uri = "http://localhost:32767/auth/slack/callback"
-
+CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
+LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
 token = ""
 code_verifier = ""
@@ -31,7 +34,7 @@ def redirection(state):
     global code_verifier, client_id
     
     # Just an unique id, not secret lol
-    client_id = dotenv.dotenv_values("../config/slack.hackaprofile.conf")["client_id"]
+    client_id = dotenv.dotenv_values(CONFIG_DIR / "slack.hackaprofile.conf")["client_id"]
 
 
     code_verifier = secrets.token_urlsafe(664)

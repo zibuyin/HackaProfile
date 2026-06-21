@@ -39,7 +39,7 @@ console = Console()
 app = typer.Typer(no_args_is_help=True)
 hackatime = backend.hackatime()
 slack = backend.slack()
-HOME = Path.home()
+
 CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
 LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
@@ -145,7 +145,7 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
     # Copy log files
     try:
         # Allow overwrite if set to force
-        shutil.copytree(Path(__file__).resolve().parent.parent / "logTemplate", LOG_DIR, dirs_exist_ok=force)
+        shutil.copytree(Path(__file__).resolve().parent / "logTemplate", LOG_DIR, dirs_exist_ok=force)
         rprint("[bold green]✓[/bold green] Log file setup done!")
     except FileExistsError:
         rprint("[bold green]✓[/bold green] Log file already exists!")
@@ -155,7 +155,7 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
     # Copy config files
     try:
         # Allow overwrite if set to force
-        shutil.copytree(Path(__file__).resolve().parent.parent / "configTemplate", CONFIG_DIR, dirs_exist_ok=force)
+        shutil.copytree(Path(__file__).resolve().parent / "configTemplate", CONFIG_DIR, dirs_exist_ok=force)
         rprint("[bold green]✓[/bold green] Config file setup done!")
     except FileExistsError:
         rprint("[bold green]✓[/bold green] Config file already exists!")
@@ -304,7 +304,7 @@ def is_agent_alive(pid: int) -> bool:
 def start():
     log = open(LOG_DIR / "agent.log", "a")
     sp.Popen(
-        [sys.executable, "-u", "agent.py"],
+        [sys.executable, "-u", Path(__file__).resolve().parent / "agent.py"],
         stdout=log,
         stderr=sp.STDOUT,
         stdin=sp.DEVNULL,

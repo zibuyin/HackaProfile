@@ -9,6 +9,8 @@ import threading
 import time
 import logging
 import dotenv
+from pathlib import Path
+import platformdirs
 
 log = logging.getLogger('werkzeug')
 
@@ -19,6 +21,8 @@ baseUrl = "https://hackatime.hackclub.com/oauth/authorize"
 exchangeBaseUrl = "https://hackatime.hackclub.com/oauth/token"
 redirection_uri = "http://localhost:32767/auth/hackatime/callback"
 
+CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
+LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
 # print(client_id)
 token = ""
@@ -32,7 +36,7 @@ def redirection(state):
     global code_verifier, client_id
     
     # Just an unique id, not secret lol
-    client_id = dotenv.dotenv_values("../config/hackatime.hackaprofile.conf")["client_id"]
+    client_id = dotenv.dotenv_values(CONFIG_DIR / "hackatime.hackaprofile.conf")["client_id"]
 
 
     code_verifier = secrets.token_urlsafe(664)

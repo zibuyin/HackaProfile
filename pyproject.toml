@@ -40,6 +40,7 @@ dependencies = [
     "urllib3==2.7.0",
     "wcwidth==0.8.1",
     "Werkzeug==3.1.8",
+    "platformdirs==4.10.0",
 ]
 
 [project.scripts]
@@ -47,3 +48,6 @@ hackaprofile = "src.frontend:app"
 
 [tool.setuptools]
 packages = ["src"]
+
+[tool.setuptools.package-data]
+src = ["configTemplate/*", "logTemplate/*"]

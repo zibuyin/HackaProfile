@@ -6,6 +6,7 @@ except ImportError:
 import dotenv
 import os
 from pathlib import Path
+import platformdirs
 
 hackatime = backend.hackatime()
 slack = backend.slack()
@@ -14,13 +15,14 @@ slack = backend.slack()
 active_services = ["slack"]
 interval = 20
 HOME = Path.home()
-CONFIG_DIR_PATH = HOME / ".config" / "hackaprofile" / "config"
+CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
+LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
 
 # langauge = ""
 
 pid = os.getpid()
-with open(CONFIG_DIR_PATH / "agent.pid", "w") as f:
+with open(CONFIG_DIR / "agent.pid", "w") as f:
     f.write(str(pid))
     f.close()
 

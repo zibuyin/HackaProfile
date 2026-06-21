@@ -13,7 +13,7 @@ dist/
 *.egg-info/
 
 # Runtime artifacts
-*.pid
+# *.pid
 logs/
 
 # Local config and secrets

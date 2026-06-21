@@ -32,13 +32,16 @@ import subprocess as sp
 import sys
 import psutil
 import signal
+import platformdirs
+
 console = Console()
 
 app = typer.Typer(no_args_is_help=True)
 hackatime = backend.hackatime()
 slack = backend.slack()
 HOME = Path.home()
-CONFIG_DIR_PATH = HOME / ".config" / "hackaprofile" / "config"
+CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
+LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
 @app.callback()
 def callback():
@@ -139,16 +142,25 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
     console.rule()
     # rprint(force)
     
+    # Copy log files
+    try:
+        # Allow overwrite if set to force
+        shutil.copytree(Path(__file__).resolve().parent.parent / "logTemplate", LOG_DIR, dirs_exist_ok=force)
+        rprint("[bold green]✓[/bold green] Log file setup done!")
+    except FileExistsError:
+        rprint("[bold green]✓[/bold green] Log file already exists!")
+    except Exception as e:
+        rprint(f"❌ Failed to setup log files: {e}")
+        
     # Copy config files
     try:
         # Allow overwrite if set to force
-        shutil.copytree(Path(__file__).resolve().parent.parent / "configTemplate", CONFIG_DIR_PATH, dirs_exist_ok=force)
+        shutil.copytree(Path(__file__).resolve().parent.parent / "configTemplate", CONFIG_DIR, dirs_exist_ok=force)
         rprint("[bold green]✓[/bold green] Config file setup done!")
     except FileExistsError:
         rprint("[bold green]✓[/bold green] Config file already exists!")
     except Exception as e:
         rprint(f"❌ Failed to setup config files: {e}")
-        
         
     
     # If no token stored
@@ -238,7 +250,7 @@ def config(platform: Annotated[str, typer.Argument]):
     if option == "Exit":
         typer.Exit()
     elif option == "Edit":
-        path = str(CONFIG_DIR_PATH/ f"{platform}.hackaprofile.conf")
+        path = str(CONFIG_DIR/ f"{platform}.hackaprofile.conf")
         rprint(f"\n[bold green]Open[/bold green] {path} [bold green]in your preferred editor!")
     
         cbConfirm = questionary.confirm(
@@ -280,7 +292,7 @@ def get_agent_pid() -> int:
     Retruns PID of the agent process based on agent.pid
     """
 
-    with open(CONFIG_DIR_PATH / "agent.pid", "r") as f:
+    with open(CONFIG_DIR / "agent.pid", "r") as f:
         pid = f.readline()
         f.close()
     return int(pid)
@@ -290,7 +302,7 @@ def is_agent_alive(pid: int) -> bool:
 
 @app.command()
 def start():
-    log = open(Path(__file__).resolve().parent.parent / "logs" / "agent.log", "a")
+    log = open(LOG_DIR / "agent.log", "a")
     sp.Popen(
         [sys.executable, "-u", "agent.py"],
         stdout=log,
@@ -324,6 +336,8 @@ def debug():
     """
     Development purpose only: Uhh, don't worry about it...
     """
+    print(CONFIG_DIR)
+    print(LOG_DIR)
 
     
 if __name__ == "__main__":

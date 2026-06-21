@@ -8,11 +8,11 @@ import keyring
 import requests
 import dotenv
 from pathlib import Path
-
+import platformdirs
 
 service_name = "HackaProfile"
-HOME = Path.home()
-CONFIG_DIR_PATH = HOME / ".config" / "hackaprofile" / "config"
+CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
+LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
 # config = dotenv.dotenv_values("../config/.conf")
 
@@ -21,7 +21,7 @@ class hackatime():
     def __init__(self) -> None:
         self.hb_url = "https://hackatime.hackclub.com/api/v1/authenticated/heartbeats/latest"
         self.username = "hackatime_token"
-        self.config_path = CONFIG_DIR_PATH / "hackatime.hackaprofile.conf"
+        self.config_path = CONFIG_DIR / "hackatime.hackaprofile.conf"
         # self.client_id = self.load_config()["client_id"]
     # Authorize hackatime
     def authorize(self) -> tuple:
@@ -91,7 +91,7 @@ class slack():
     def __init__(self) -> None:
         self.base_url = "https://slack.com/api"
         self.username = "slack_token"
-        self.config_path = CONFIG_DIR_PATH / "slack.hackaprofile.conf"
+        self.config_path = CONFIG_DIR / "slack.hackaprofile.conf"
         # self.client_id = self.load_config()["client_id"]
     # Authorize hackatime
     def authorize(self) -> tuple:

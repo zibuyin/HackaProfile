@@ -20,6 +20,32 @@ hackaprofile setup
 
 Then follow the guided setup
 
+### Usage
+Configure profile messages via `hackaprofile config [platform name e.g. slack]`.
+within the config file, you will see something like this:
+```env
+# title = 
+# phone = 
+# real_name =
+# display_name = 
+```
+Uncomment the values you want to set, e.g:
+```
+# title = 
+# phone = 
+#real_name =
+display_name = 
+```
+Now you can set the value of this field (which corrosponds to the fields on Slack/the platform you are configuring). There are some useful placeholders and logic operators you could use (see below)
+```
+# title = 
+# phone = 
+#real_name =
+display_name = Bob {% if language %}(Typing {{language}}...){% elif editor == "Slack" %}(Yapping on Slack) {% endif %}
+```
+
+Due to API rate limiting, there will be a ~20s delay between changing tasks (e.g. changing to a new language) and the status updating, this delay *could* be reduced by reducing the `interval` value in `hackaprofile.conf` (#TODO). However, doing so you are risking getting rate-limited. Find a balance.
+
 ## Placeholder Variables
 A key feature of HackaProfile is that it allows you to customise your profile however you like (just like how you would change it on Slack/other platforms) BUT it **also allows you to use dynamic values** (i.e. Placeholder variables).
 

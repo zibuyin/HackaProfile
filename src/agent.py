@@ -8,14 +8,20 @@ import os
 from pathlib import Path
 import platformdirs
 from jinja2 import Template
+import logging
 
-print("***** WORKER AGENT STARTER *****")
+logging.basicConfig(
+    format='[%(asctime)s] (Line: %(lineno)d) %(message)s',
+    level=logging.INFO
+)
+
+print("***** WORKER AGENT STARTED *****")
 hackatime = backend.hackatime()
 slack = backend.slack()
 
 
 active_services = ["slack"]
-interval = 20
+interval = 10
 HOME = Path.home()
 CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
 LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
@@ -48,9 +54,9 @@ def parse_config(config: dict, map):
         parsed_config[key] = result
 
         # print(parsed)
-    print("===")
-    print(parsed_config)  
-    print("===")      
+    print("---Parsed Config---")
+    logging.info(parsed_config)
+    print("---EO Parsed Config---\n")      
     return parsed_config
 
 
@@ -81,14 +87,14 @@ while True:
     
     print(f'Language: {map["language"]}')
     print("---HT HB---")
-    print(json)
-    print("---EO HT HB---")
+    logging.info(json)
+    print("---EO HT HB---\n")
     if "slack" in active_services:
         print(slack.fetch_config())
         config = parse_config(slack.fetch_config(), map)
         print(config)
         
         res = slack.set_profile(config)
-        print(res)
-    print("---")
+        logging.info(res)
+    print("==============================================================")
     time.sleep(interval)

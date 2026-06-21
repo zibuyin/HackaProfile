@@ -9,13 +9,16 @@
 - More features #TODO ~~(I don't wanna write README.md >:3)~~
 
 ## installation
-> [!TIP]
-> One line install does not work yet!
-### MacOS
-`brew install hackaprofile`
-### Linux
-Debian/Ubuntu:
-`apt install hackaprofile`
+### Install pipx
+Check [pipx docs](https://pipx.pypa.io/stable/how-to/install-pipx/)
+
+### Install Hackaprofile
+```bash
+pipx install hackaprofile
+hackaprofile setup
+```
+
+Then follow the guided setup
 
 ## Placeholder Variables
 A key feature of HackaProfile is that it allows you to customise your profile however you like (just like how you would change it on Slack/other platforms) BUT it **also allows you to use dynamic values** (i.e. Placeholder variables).
@@ -38,3 +41,35 @@ Example
 - `{{entity}}` Path to the file workng on
 - `{{machine}}` Current machine's hostname
 
+## Logic Operators
+You could not only dynamically set variables, but you could also **choose how they are represented dynamically*
+
+### If Statements:
+`{% if [condition] %} ... {% elif [condition] %} ... {% else %} ... {% endif %}
+### Filters:
+
+Transforms the string to lowercase
+```
+{{string|lower}}
+```
+
+Transforms the STRING to UPPERCASE
+```
+{{string|upper}}
+```
+
+Transforms the String into a Title format
+```
+{{string|title}}
+```
+
+### Escaping:
+```
+{{ "string to be escaped" }}
+```
+or
+```
+{% raw %}
+string to be escaped
+{% endraw %}
+```

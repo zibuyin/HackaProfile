@@ -7,7 +7,9 @@ import dotenv
 import os
 from pathlib import Path
 import platformdirs
+from jinja2 import Template
 
+print("***** WORKER AGENT STARTER *****")
 hackatime = backend.hackatime()
 slack = backend.slack()
 
@@ -34,24 +36,23 @@ def clean_value(value: str) -> str:
 
 def parse_config(config: dict, map):
     parsed_config = {}
-    for _, field in enumerate(config):
-        key = field
-        template: str = config[field]
-        # Replace {{key}} placeholders directly from the map.
-        for map_key, map_value in map.items():
-            template = template.replace(map_key, str(map_value))
-        try:
-            parsed_value = clean_value(template.format_map(map))
+    for key, template_str in config.items():
+        template = Template(template_str)
+        result = template.render(**map)
             
-            # if the config field is empty, don't append it
-            if parsed_value != "":
-                parsed_config[key] = parsed_value
-        except KeyError:
-            pass
+            # # if the config field is empty, don't append it
+            # if key == "status_expiration":
+            #     parsed_value = int(parsed_value)
             
+
+        parsed_config[key] = result
+
         # print(parsed)
-        
+    print("===")
+    print(parsed_config)  
+    print("===")      
     return parsed_config
+
 
 while True:
     json = hackatime.fetch_hb()
@@ -64,23 +65,24 @@ while True:
     
     
     map = {
-        "{{id}}": json.get("id", ""),
-        "{{created_at}}": json.get("created_at", ""),
-        "{{time}}": json.get("time", ""),
-        "{{category}}": json.get("category", ""),
-        "{{project}}": json.get("project", ""),
-        "{{language}}": json.get("language", ""),
-        "{{editor}}": json.get("editor", ""),
-        "{{operating_system}}": json.get("operating_system", ""),
-        "{{machine}}": json.get("machine", ""),
-        "{{entity}}": json.get("entity", "")
+        "id": json.get("id", ""),
+        "created_at": json.get("created_at", ""),
+        "time": json.get("time", ""),
+        "category": json.get("category", ""),
+        "project": json.get("project", ""),
+        "language": json.get("language", ""),
+        "editor": json.get("editor", ""),
+        "operating_system": json.get("operating_system", ""),
+        "machine": json.get("machine", ""),
+        "entity": json.get("entity", "")
     }
     
     
     
-    print(f'Language: {map["{{language}}"]}')
+    print(f'Language: {map["language"]}')
+    print("---HT HB---")
     print(json)
-    
+    print("---EO HT HB---")
     if "slack" in active_services:
         print(slack.fetch_config())
         config = parse_config(slack.fetch_config(), map)
@@ -88,19 +90,5 @@ while True:
         
         res = slack.set_profile(config)
         print(res)
-        # for _, field in enumerate(slack_config):
-        #     print((field, slack_config[field]))
-            
-            
-        # slack.set_profile(
-        #     profile={
-        #         "status_text": "test status text",
-        #         "status_emoji": ":67:",
-        #         "status_expiration": 0
-        # })
     print("---")
     time.sleep(interval)
-    
-    
-    
-#  

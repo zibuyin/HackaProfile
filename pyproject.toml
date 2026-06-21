@@ -42,7 +42,10 @@ dependencies = [
     "Werkzeug==3.1.8",
     "platformdirs==4.10.0",
 ]
-
+[project.urls]
+Repository = "https://github.com/zibuyin/HackaProfile"
+Issues = "https://github.com/zibuyin/HackaProfile/issues"
+Homepage = "https://github.com/zibuyin/HackaProfile"
 [project.scripts]
 hackaprofile = "src.frontend:app"
 

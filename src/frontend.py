@@ -218,6 +218,10 @@ class placeholderHighlighter(Highlighter):
         
 @app.command()
 def config(platform: Annotated[str, typer.Argument]):
+    """
+    Shows a structured preview of the config files for each of the platforms
+    """
+    
     table = Table(
         "Field",
         "Value",
@@ -303,16 +307,24 @@ def is_agent_alive(pid: int) -> bool:
 @app.command()
 def start():
     log = open(LOG_DIR / "agent.log", "a")
-    sp.Popen(
-        [sys.executable, "-u", Path(__file__).resolve().parent / "agent.py"],
-        stdout=log,
-        stderr=sp.STDOUT,
-        stdin=sp.DEVNULL,
-        start_new_session=True
-        
-    )
-    # time.sleep(0.1)
-    rprint(f"[bold green]✓[/bold green] Started background worker!")
+    error = "Unknown error"
+    try:
+        sp.Popen(
+            [sys.executable, "-u", Path(__file__).resolve().parent / "agent.py"],
+            stdout=log,
+            stderr=sp.STDOUT,
+            stdin=sp.DEVNULL,
+            start_new_session=True
+            
+        )
+    except Exception as e:
+        error = e
+    time.sleep(0.5)
+    pid = get_agent_pid()
+    if is_agent_alive(pid):
+        rprint(f"[bold green]✓[/bold green] Started background worker!")
+    else:
+        rprint(f"❌ Worker not started. {error}")
     
 @app.command()
 def stop():
@@ -330,7 +342,11 @@ def stop():
     else:
         rprint(f"❌ Worker not stopped{error}. Retry or manually kill process {pid}")
 
-
+@app.command()
+def restart():
+    stop()
+    start()
+    
 @app.command()
 def debug():
     """
@@ -338,6 +354,7 @@ def debug():
     """
     print(CONFIG_DIR)
     print(LOG_DIR)
+    rprint(slack.get_profile())
 
     
 if __name__ == "__main__":

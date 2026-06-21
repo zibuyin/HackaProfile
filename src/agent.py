@@ -1,7 +1,11 @@
 import time
-import backend as backend
+try:
+    from . import backend
+except ImportError:
+    import backend
 import dotenv
 import os
+from pathlib import Path
 
 hackatime = backend.hackatime()
 slack = backend.slack()
@@ -9,11 +13,14 @@ slack = backend.slack()
 
 active_services = ["slack"]
 interval = 20
+HOME = Path.home()
+CONFIG_DIR_PATH = HOME / ".config" / "hackaprofile" / "config"
+
 
 # langauge = ""
 
 pid = os.getpid()
-with open("agent.pid", "w") as f:
+with open(CONFIG_DIR_PATH / "agent.pid", "w") as f:
     f.write(str(pid))
     f.close()
 

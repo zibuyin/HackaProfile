@@ -14,7 +14,10 @@ from rich.highlighter import Highlighter
 import typer
 from typing import Annotated
 
-import backend as backend
+try:
+    from . import backend
+except ImportError:
+    import backend
 
 import questionary
 
@@ -34,7 +37,8 @@ console = Console()
 app = typer.Typer(no_args_is_help=True)
 hackatime = backend.hackatime()
 slack = backend.slack()
-
+HOME = Path.home()
+CONFIG_DIR_PATH = HOME / ".config" / "hackaprofile" / "config"
 
 @app.callback()
 def callback():
@@ -61,7 +65,14 @@ def status():
     
     with console.status("Fetching status...", spinner="dots"):
         hackatime_status: dict = hackatime.fetch_hb()
-        slack_status: dict = slack.get_profile()["profile"]
+        
+        temp = slack.get_profile()
+        # rprint(temp)
+        try:
+            slack_status: dict = temp["profile"]
+        except KeyError:
+            # If there is an error
+            slack_status: dict = temp
         # rprint(slack_status)
         
     if hackatime_status.get("ok", True) == False:
@@ -70,7 +81,9 @@ def status():
         parsed_hackatime_status["Authorization"] = "[bold green]✓[/bold green] Authorized"
         parsed_hackatime_status["Current Language"] = hackatime_status.get("language", "Unknown")
         parsed_hackatime_status["Current Project"] = hackatime_status.get("project", "Unknown")
-    if slack_status.get("ok", True) == False:
+        
+    # print(slack_status)
+    if slack_status.get("ok") == False:
         parsed_slack_status["Authorization"] = f"❌ {slack_status.get("error", "Unknown error")}"
     else:
         parsed_slack_status["Authorization"] = "[bold green]✓[/bold green] Authorized"
@@ -129,7 +142,7 @@ def setup(force: Annotated[bool, typer.Option("--force")] = False):
     # Copy config files
     try:
         # Allow overwrite if set to force
-        shutil.copytree("../configTemplate", "../config", dirs_exist_ok=force)
+        shutil.copytree(Path(__file__).resolve().parent.parent / "configTemplate", CONFIG_DIR_PATH, dirs_exist_ok=force)
         rprint("[bold green]✓[/bold green] Config file setup done!")
     except FileExistsError:
         rprint("[bold green]✓[/bold green] Config file already exists!")
@@ -225,7 +238,7 @@ def config(platform: Annotated[str, typer.Argument]):
     if option == "Exit":
         typer.Exit()
     elif option == "Edit":
-        path = str(Path(__file__).resolve().parent.parent / "config" / f"{platform}.hackaprofile.conf")
+        path = str(CONFIG_DIR_PATH/ f"{platform}.hackaprofile.conf")
         rprint(f"\n[bold green]Open[/bold green] {path} [bold green]in your preferred editor!")
     
         cbConfirm = questionary.confirm(
@@ -267,7 +280,7 @@ def get_agent_pid() -> int:
     Retruns PID of the agent process based on agent.pid
     """
 
-    with open("agent.pid", "r") as f:
+    with open(CONFIG_DIR_PATH / "agent.pid", "r") as f:
         pid = f.readline()
         f.close()
     return int(pid)
@@ -311,8 +324,6 @@ def debug():
     """
     Development purpose only: Uhh, don't worry about it...
     """
-    json = slack.get_profile()
-    rprint(json)
 
     
 if __name__ == "__main__":

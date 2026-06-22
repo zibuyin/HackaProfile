@@ -20,6 +20,13 @@ stateRNG = secrets.token_urlsafe(32)
 baseUrl = "https://hackatime.hackclub.com/oauth/authorize"
 exchangeBaseUrl = "https://hackatime.hackclub.com/oauth/token"
 redirection_uri = "http://localhost:32767/auth/hackatime/callback"
+headless = False
+
+headless_redirection_uri = "https://authforward.nathanyin.workers.dev"
+
+
+# headless_redirection_uri = "http://localhost:5500"
+
 
 CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
 LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
@@ -28,7 +35,7 @@ LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 token = ""
 code_verifier = ""
 client_id = ""
-
+headless_global = False
 token_event = threading.Event()
 # Redirect to the auth page
 def redirection(state):
@@ -54,6 +61,8 @@ def redirection(state):
     url = f"{baseUrl}/?client_id={args['client_id']}&redirect_uri={args["redirect_uri"]}&response_type=code&state={args["state"]}&code_challenge={args["code_challenge"]}&code_challenge_method={args["code_challenge_method"]}&state={args["state"]}"
     
     webbrowser.open(url)
+    if headless_global:
+        headlessCallback()
 
 
 # Exchange API key
@@ -94,10 +103,21 @@ def hackatimeCallback():
         return "<p>Authorization completed, you can close this tab now.</p>"
     else:
         return "<p>You have denied authorization, or an error has occured.</p><p>If you did not deny authorization, please close this tab and submit a issue on Github</p>"
-    
 
-def authenticate():
+def headlessCallback() -> None:
+    global token
+    token = exchange(input("Please input the code that appeared on the screen: ")
+)
+
+def authenticate(headless: bool):
+    global redirection_uri, headless_global
+    headless_global = headless
+    # Overwrite the uri with headless uri if configured as so
+    if headless:
+        redirection_uri = headless_redirection_uri  
+        
     redirection(stateRNG)
+    
     server = make_server("127.0.0.1", 32767, app)
     thread = threading.Thread(target=server.serve_forever)
     thread.start()
@@ -113,4 +133,4 @@ def authenticate():
 
 # Debug
 if __name__ == "__main__":
-    authenticate()
+    authenticate(headless=False)

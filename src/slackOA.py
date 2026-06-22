@@ -20,6 +20,8 @@ stateRNG = secrets.token_urlsafe(32)
 baseUrl = "https://slack.com/oauth/v2/authorize"
 exchangeBaseUrl = "https://slack.com/api/oauth.v2.access"
 redirection_uri = "http://localhost:32767/auth/slack/callback"
+headless_redirection_uri = "https://authforward.nathanyin.workers.dev"
+# headless_redirection_uri = "http://localhost:5500"
 CONFIG_DIR = Path(platformdirs.user_config_dir("hackaprofile"))
 LOG_DIR = Path(platformdirs.user_log_dir("hackaprofile"))
 
@@ -28,6 +30,7 @@ code_verifier = ""
 
 token_event = threading.Event()
 client_id = ""
+headless_global = False
 # Redirect to the auth page
 def redirection(state):
     # print("debug")
@@ -53,6 +56,8 @@ def redirection(state):
     url = f"{baseUrl}/?client_id={args['client_id']}&redirect_uri={args["redirect_uri"]}&scope={args["scope"]}&user_scope={args["user_scope"]}&state={args["state"]}&code_challenge={args["code_challenge"]}&code_challenge_method={args["code_challenge_method"]}"
     
     webbrowser.open(url)
+    if headless_global:
+        headlessCallback()
 
 
 # Exchange API key
@@ -95,7 +100,16 @@ def hackatimeCallback():
         return "<p>You have denied authorization, or an error has occured.</p><p>If you did not deny authorization, please close this tab and submit a issue on Github</p>"
     
 
-def authenticate():
+def headlessCallback() -> None:
+    global token
+    token = exchange(input("Please input the code that appeared on the screen: "))
+
+def authenticate(headless: bool = False):
+    global redirection_uri, headless_global
+    headless_global = headless
+    # Overwrite the uri with headless uri if configured as so
+    if headless:
+        redirection_uri = headless_redirection_uri
     redirection(stateRNG)
     server = make_server("127.0.0.1", 32767, app)
     thread = threading.Thread(target=server.serve_forever)
@@ -111,4 +125,4 @@ def authenticate():
 
 # Debug
 if __name__ == "__main__":
-    authenticate()
+    authenticate(headless=False)

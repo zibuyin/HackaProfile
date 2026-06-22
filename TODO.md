@@ -3,6 +3,7 @@
 - [x] Frontend (UI or CLI?)
 - [ ] Auto PFP generation?
 - [x] Sign out
-- [ ] Proper logger for agent/worker
+- [x] Proper logger for agent/worker
 - [ ] Add agent to startup
-- [ ] Github and PyPi release
+- [x] PyPi release
+- [ ] Github release

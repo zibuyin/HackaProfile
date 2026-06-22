@@ -46,6 +46,8 @@ display_name = Bob {% if language %}(Typing {{language}}...){% elif editor == "S
 
 Due to API rate limiting, there will be a ~20s delay between changing tasks (e.g. changing to a new language) and the status updating, this delay *could* be reduced by reducing the `interval` value in `hackaprofile.conf` (#TODO). However, doing so you are risking getting rate-limited. Find a balance.
 
+You could refresh and see the new config in action by running `hackaprofile restart` - which restarts the background worker
+
 ## Placeholder Variables
 A key feature of HackaProfile is that it allows you to customise your profile however you like (just like how you would change it on Slack/other platforms) BUT it **also allows you to use dynamic values** (i.e. Placeholder variables).
 

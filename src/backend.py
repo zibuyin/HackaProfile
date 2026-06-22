@@ -24,8 +24,8 @@ class hackatime():
         self.config_path = CONFIG_DIR / "hackatime.hackaprofile.conf"
         # self.client_id = self.load_config()["client_id"]
     # Authorize hackatime
-    def authorize(self) -> tuple:
-        token = hackatimeOA.authenticate()
+    def authorize(self, headless: bool) -> tuple:
+        token = hackatimeOA.authenticate(headless=headless)
         # If token is given:
         if type(token) == str and token:
             self.store_token(token)
@@ -94,8 +94,8 @@ class slack():
         self.config_path = CONFIG_DIR / "slack.hackaprofile.conf"
         # self.client_id = self.load_config()["client_id"]
     # Authorize hackatime
-    def authorize(self) -> tuple:
-        token = slackOA.authenticate()
+    def authorize(self, headless: bool = False) -> tuple:
+        token = slackOA.authenticate(headless=headless)
         # If token is given:
         if type(token) == str and token:
             self.store_token(token)

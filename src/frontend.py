@@ -36,6 +36,7 @@ import platformdirs
 import shlex
 
 import tomllib
+from contextlib import nullcontext
 
 console = Console()
 
@@ -139,102 +140,99 @@ def status():
         
 
 # [bold green]✓[/bold green]
-def authorizeHA():
-    ok, hatoken = hackatime.authorize()
-    # If token is given:
-    if ok:
-        rprint("[bold green]✓[/bold green] Hackatime authorized!")
-        return hatoken
-    else:
-        rprint(f"[bold red]err: {str(hatoken)}")
-        hatoken = authorizeHA()
-        
-    return hatoken
 
 @app.command()
-def setup(force: Annotated[bool, typer.Option("--force")] = False):
+def setup(force: Annotated[bool, typer.Option("--force")] = False, headless: Annotated[bool, typer.Option("--headless")] = False):
     """
     Guided setup of HackaProfile
     """
+    conf = True
     if force:
         conf = Confirm.ask("[bold red]Setting --force will CLEAR ALL EXISTING CONFIG AND LOGS. Do you wish to continue?", default=False)
-        if conf:
-            console.clear()
-            # console.rule("HackaProfile")
+        
+    if conf:
+        console.clear()
+        # console.rule("HackaProfile")
+        if not headless:
             rprint(Panel(Text("Welcome to HackaProfile\nyou will be guided on an easy setup of the tool!", justify="center")))
-            console.rule()
-            # rprint(force)
+        else:
+            rprint(Panel(Text("Welcome to HackaProfile\nyou will be guided on an headless setup of the tool!", justify="center")))
+        console.rule()
+        # rprint(force)
+        
+        # Copy log files
+        try:
+            # Allow overwrite if set to force
+            shutil.copytree(Path(__file__).resolve().parent / "logTemplate", LOG_DIR, dirs_exist_ok=force)
+            rprint("[bold green]✓[/bold green] Log file setup done!")
+        except FileExistsError:
+            rprint("[bold green]✓[/bold green] Log file already exists!")
+        except Exception as e:
+            rprint(f"❌ Failed to setup log files: {e}")
             
-            # Copy log files
-            try:
-                # Allow overwrite if set to force
-                shutil.copytree(Path(__file__).resolve().parent / "logTemplate", LOG_DIR, dirs_exist_ok=force)
-                rprint("[bold green]✓[/bold green] Log file setup done!")
-            except FileExistsError:
-                rprint("[bold green]✓[/bold green] Log file already exists!")
-            except Exception as e:
-                rprint(f"❌ Failed to setup log files: {e}")
-                
-            # Copy config files
-            try:
-                # Allow overwrite if set to force
-                shutil.copytree(Path(__file__).resolve().parent / "configTemplate", CONFIG_DIR, dirs_exist_ok=force)
-                rprint("[bold green]✓[/bold green] Config file setup done!")
-            except FileExistsError:
-                rprint("[bold green]✓[/bold green] Config file already exists!")
-            except Exception as e:
-                rprint(f"❌ Failed to setup config files: {e}")
-                
+        # Copy config files
+        try:
+            # Allow overwrite if set to force
+            shutil.copytree(Path(__file__).resolve().parent / "configTemplate", CONFIG_DIR, dirs_exist_ok=force)
+            rprint("[bold green]✓[/bold green] Config file setup done!")
+        except FileExistsError:
+            rprint("[bold green]✓[/bold green] Config file already exists!")
+        except Exception as e:
+            rprint(f"❌ Failed to setup config files: {e}")
             
-            # If no token stored
-            if force or not hackatime.status()["ok"]:
-                # hackatimeConfirm = Confirm.ask("[bold cyan]Do you want to authorize Hackatime (This will redirect you to OAuth page)", default=True)
-                hackatimeConfirm  = questionary.confirm("Do you want to authorize Hackatime (This will redirect you to OAuth page)").ask()
-                if hackatimeConfirm:
-                    with console.status("Authorizing Hackatime", spinner="dots"):
-                        ok, hackatime_token = hackatime.authorize()
-                        
-                    if ok:
-                        rprint("[bold green]✓[/bold green] Hackatime authorized!")
-                        
-                    else :
-                        rprint(f"[bold red]err: {str(hackatime_token)}")    
-                else:
-                    rprint("[bold red]err: HackaProfile could not function without Hackatime.")
-                    typer.Abort()
-            # If already stored
+        
+        # If no token stored
+        if force or not hackatime.status()["ok"]:
+            # hackatimeConfirm = Confirm.ask("[bold cyan]Do you want to authorize Hackatime (This will redirect you to OAuth page)", default=True)
+            hackatimeConfirm  = questionary.confirm("Do you want to authorize Hackatime (This will redirect you to OAuth page)").ask()
+            if hackatimeConfirm:
+                
+                # Dont show the spinner in headless mode
+                ctx = console.status("Authorizing Hackatime", spinner="dots") if not headless else nullcontext()
+                with ctx:
+                    ok, hackatime_token = hackatime.authorize(headless=headless)
+                if ok:
+                    rprint("[bold green]✓[/bold green] Hackatime authorized!")
+                    
+                else :
+                    rprint(f"[bold red]err: {str(hackatime_token)}")    
             else:
-                rprint("[bold green]✓[/bold green] Hackatime already authorized!\n")
-                
-            platforms = questionary.checkbox(
-                message="Please choose the platforms you want to link to",
-                choices=[
-                    "Slack"
-                ]
-            ).ask()
+                rprint("[bold red]err: HackaProfile could not function without Hackatime.")
+                typer.Abort()
+        # If already stored
+        else:
+            rprint("[bold green]✓[/bold green] Hackatime already authorized!\n")
             
-            # Authorize the platforms
-            
-            for platform in platforms:
-                # print("test")
-                cls = backend.platfroms.get(platform.lower())
-                if cls:
-                    instance = cls()
-                    with console.status(f"Authorizing {platform}", spinner="dots"):
-                        ok, platform_token = instance.authorize()
-                    if ok:
-                        rprint(f"[bold green]✓[/bold green] {platform} authorized!")
-                        
-                    else:
-                        rprint(f"[bold red]err: {str(platform_token)}")
+        platforms = questionary.checkbox(
+            message="Please choose the platforms you want to link to",
+            choices=[
+                "Slack"
+            ]
+        ).ask()
+        
+        # Authorize the platforms
+        
+        for platform in platforms:
+            # print("test")
+            cls = backend.platfroms.get(platform.lower())
+            if cls:
+                instance = cls()
+                ctx = console.status(f"Authorizing {platform}", spinner="dots") if not headless else nullcontext()
+                with ctx:
+                    ok, platform_token = instance.authorize(headless=headless)
+                if ok:
+                    rprint(f"[bold green]✓[/bold green] {platform} authorized!")
                     
                 else:
-                    rprint("[bold red]err: Platform unsupported")
+                    rprint(f"[bold red]err: {str(platform_token)}")
                 
-                
-            rprint("[bold green]✓[/bold green] Setup complete!\n\n1.Run [bold green]hackaprofile config \\[platform name(e.g. slack)][/bold green] to configure\n2.Run [bold green]hackaprofile start[/bold green] to start updating your profile automatically!")
-        else:
-            rprint("[bold red]Aborted.")
+            else:
+                rprint("[bold red]err: Platform unsupported")
+            
+            
+        rprint("[bold green]✓[/bold green] Setup complete!\n\n1.Run [bold green]hackaprofile config \\[platform name(e.g. slack)][/bold green] to configure\n2.Run [bold green]hackaprofile start[/bold green] to start updating your profile automatically!")
+    else:
+        rprint("[bold red]Aborted.")
 
 class placeholderHighlighter(Highlighter):
     def highlight(self, text) -> None:
@@ -304,13 +302,17 @@ def auth(platform: Annotated[str, typer.Option(prompt=False, help="Which platfor
     
     rprint(f"Please use [bold green]hackaprofile setup[/bold green] and select the platforms you want to authorize, use [bold green]--force[/bold green] to re-auth Hackatime")
 
+
+# TODO: Fix --all
 @app.command()
-def revoke(platform: str, all: Annotated[bool, typer.Option("--all")] = False):
+def revoke(platform: Annotated[str, typer.Argument], all: Annotated[bool, typer.Option("--all")] = False):
     
     # TODO
     if all:
+        rprint(f"[bold red]Revoking ALL tokens")
         pass
     else:
+        rprint(f"[bold red]Revoking {platform} token")
         if platform == "hackatime":
             rprint(hackatime.revoke())
 

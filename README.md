@@ -25,7 +25,7 @@ hackaprofile setup --headless
 ```
 If you are deploying on your personal device, use:
 ```bash
-hackaprofile setup --headless
+hackaprofile setup
 ```
 > [!TIP]
 > No matter which setup you use, the Hackatime data source will be from the computer you are typing from.

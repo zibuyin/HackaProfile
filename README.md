@@ -18,6 +18,19 @@ pipx install hackaprofile
 hackaprofile setup
 ```
 
+### Setup
+If you are deploying on a headless device (e.g. a VPS connected via ssh), use:
+```bash
+hackaprofile setup --headless
+```
+If you are deploying on your personal device, use:
+```bash
+hackaprofile setup --headless
+```
+> [!TIP]
+> No matter which setup you use, the Hackatime data source will be from the computer you are typing from.
+> If you deployed this on a VPS, but you are coding on your PC and Hackatime is installed on it, the data source will be from your PC
+
 Then follow the guided setup
 
 ### Usage

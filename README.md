@@ -27,6 +27,17 @@ If you are deploying on your personal device, use:
 ```bash
 hackaprofile setup
 ```
+
+> [!WARNING]
+> Some environments (e.g. Ubuntu Server without GUI) does not have a default keyring service - which is required to safely store the > API keys. It is recommanded to install a third-party keyring service for these environments. For more info, click [here](https://pypi.org/project/keyring/)
+
+Headless Linux environments:
+install Gnome-keyring
+'''
+sudo apt install gnome-keyring
+'''
+Or other
+
 > [!TIP]
 > No matter which setup you use, the Hackatime data source will be from the computer you are typing from.
 > If you deployed this on a VPS, but you are coding on your PC and Hackatime is installed on it, the data source will be from your PC

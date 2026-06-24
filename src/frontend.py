@@ -34,8 +34,8 @@ import psutil
 import signal
 import platformdirs
 import shlex
+import importlib.metadata as importlib_metadata
 
-import tomllib
 from contextlib import nullcontext
 
 console = Console()
@@ -119,10 +119,25 @@ def status():
     grid.add_row(hackatime_table, slack_table)
     
     
-    with open(Path(__file__).resolve().parent.parent / "pyproject.toml", "rb") as f:
-        data = tomllib.load(f)
-        f.close()
-    rprint(f"\n[bold yellow]Running {data["project"]["name"]} v{data["project"]["version"]}")
+    app_name = "HackaProfile"
+    app_version = "unknown"
+    try:
+        app_version = importlib_metadata.version("HackaProfile")
+    except importlib_metadata.PackageNotFoundError:
+        # Fallback for running directly from source tree without installation metadata.
+        local_pyproject = Path(__file__).resolve().parent.parent / "pyproject.toml"
+        if local_pyproject.exists():
+            try:
+                import tomllib
+
+                with open(local_pyproject, "rb") as f:
+                    data = tomllib.load(f)
+                app_name = data.get("project", {}).get("name", app_name)
+                app_version = data.get("project", {}).get("version", app_version)
+            except Exception:
+                pass
+
+    rprint(f"\n[bold yellow]Running {app_name} v{app_version}")
     
     
     rprint(

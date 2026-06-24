@@ -11,6 +11,7 @@ import logging
 import dotenv
 from pathlib import Path
 import platformdirs
+from rich import print as rprint
 
 log = logging.getLogger('werkzeug')
 
@@ -56,11 +57,17 @@ def redirection(state):
         "state": state,
         "code_challenge": code_challenge,
         "code_challenge_method": "S256",
-        "state": state,
     }
-    url = f"{baseUrl}/?client_id={args['client_id']}&redirect_uri={args["redirect_uri"]}&response_type=code&state={args["state"]}&code_challenge={args["code_challenge"]}&code_challenge_method={args["code_challenge_method"]}&state={args["state"]}"
+    url = requests.Request("GET", baseUrl, params=args).prepare().url
+    if url is None:
+        raise RuntimeError("Failed to construct authorization URL")
     
-    webbrowser.open(url)
+    if not headless_global:
+        webbrowser.open(url)
+    else:
+        rprint("Please open this URL in your browser:\n")
+        print(url)
+        print("\n")
     if headless_global:
         headlessCallback()
 
